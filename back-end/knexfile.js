@@ -3,9 +3,14 @@
  *
  * You will not need to make changes to this file.
  */
+// REFORMAT DATE AS IT COMES IN FROM KNEX SERVICE
+
 
 require('dotenv').config();
 const path = require("path");
+
+var types = require('pg').types;
+types.setTypeParser(1082, val => val);
 
 const {
   DATABASE_URL = "postgresql://postgres@localhost/postgres",
