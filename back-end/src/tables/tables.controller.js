@@ -7,6 +7,7 @@ const validateTable = validTable();
 const tableHasProperties = hasProperties("reservation_id")
 const tableUpdate = require("../utils/tableUpdate");
 const validateTableInfo = tableUpdate();
+const {update: updateRes, read: readRes } = require("../reservations/reservations.service");
 
 
 async function list(req, res, next) {
