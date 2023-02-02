@@ -25,17 +25,8 @@ function validType(){
             next({ status:400, message: 'Sorry, we are closed on Tuesdays'})
         }
 
-        // console.log(`RESERVATIONDAY DATE${reservationDay}`)
-
-
-/**     reservationDay --> Tue Dec 31 2024 19:00:00 GMT-0500 (Eastern Standard Time)
- *      Date.now()  --> 1675294729286
- *   
- * 
- */
         const todayDateLong = Date.now();
-        const todayDate = new Date(todayDateLong);      //Wed Feb 01 2023 18:42:11 GMT-0500 (Eastern Standard Time)
-
+        const todayDate = new Date(todayDateLong);  
 
         const resYear = reservationDay.getUTCFullYear();
         const resMonth = reservationDay.getUTCMonth();
@@ -44,16 +35,6 @@ function validType(){
         const thisYear = todayDate.getUTCFullYear();
         const thisMonth = todayDate.getUTCMonth();
         const thisDay = todayDate.getUTCDate();
-    
-    
-/**
- *       if resYear > thisYear       good
- *      if resYear = thisyear && resMonth > thisMonth       good
- *       if resYear=thisyear && resMonth=thisMonth && resDay > this Day     good
- * 
- * if this year is > res year gone
- * if this year === res year but this month is greather than gone
- */
 
         if(thisYear > resYear){
             next({ status:400, message: 'You can only make reservations for the future.'})
