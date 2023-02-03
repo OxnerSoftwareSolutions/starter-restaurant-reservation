@@ -5,13 +5,13 @@ const hasRequiredProperties = hasProperties("first_name", "last_name", "mobile_n
 const validateTypes = require("../utils/validateReservation");
 const validateInputTypes = validateTypes();
 
-function formatDate(req, res, next) {
-  const TodayDate = new Date(Date.now());
-  const year = TodayDate.getFullYear();
-  const month = TodayDate.getMonth() + 1;
-  const day = TodayDate.getDate();
+function getTodaysDate() {
+  const todayDate = new Date(Date.now());
+  const year = todayDate.getFullYear();
+  const month = todayDate.getMonth() + 1;
+  const day = todayDate.getDate();
   const formattedDate = `${year}-${month}-${day}`;
-  return formattedDate
+  return formattedDate;
 }
 
 async function searchPhoneNum(req, res, next) {
@@ -27,20 +27,28 @@ async function searchPhoneNum(req, res, next) {
 
 async function list(req, res, _next) {
   let { date }  = req.query;//It lists all reservations based on a date query parameter in the request.
-  if(!date){
-    date = formatDate()
-  }// If the date parameter is not present, it calls formatDate to get the current date, then it calls the list method of the service module to retrieve the reservations
+  !date ? (date = getTodaysDate()) : null;// If the date parameter is not present, it calls formatDate to get the current date, then it calls the list method of the service module to retrieve the reservations
 
   const listing = await service.list(date)
   let filtered = listing.filter((eachRes) => 
     eachRes.status !== 'finished'
   )// It filters the reservations to exclude those with a status of 'finished' and returns the filtered list as a JSON response.
+  console.log(date)
   res.json({ data: filtered})
 }
 
-async function create(req, res, _next) {
+// Function to create a new reservation
+async function create(req, res, next) {
+  // Check if the status in the request body is either 'seated' or 'finished'
+  const reqStatus = req.body.data.status;
+  if (reqStatus == 'seated' || reqStatus == 'finished') {
+    // If the status is either 'seated' or 'finished', return an error with a status code of 400 and a message indicating that the status is not valid
+    next({ status: 400, message: `Status is ${reqStatus}`})
+  }
+  // Call the create method of the service module with the data from the request body
   const data = await service.create(req.body.data);
-  res.status(201).json({ data });// It creates a new reservation by calling the create method of the service module with the data from the request body and returns the newly created reservation as a JSON response with a status of 201.
+  // Return the newly created reservation as a JSON response with a status of 201
+  res.status(201).json({ data });
 }
 
 async function reservationExists(req, res, next){
@@ -79,23 +87,77 @@ function validateStatusChange(req, res, next) {
   next();
 }
 
-
-async function update(req, res, next) {
-  // Create a new object with the updated status
+async function updateStatus(req, res, next) {
+  // Destructure the foundReservation and status from the request body data.
   const updatedRes = {
     ...res.locals.foundReservation,
     status: req.body.data.status,
   }
-  // Call the service's update function to save the updated reservation
+  // Call the update function from the service to update the reservation status in the database.
   const updated = await service.update(updatedRes);
-  // Return a success response with the updated reservation data
+  // Return a JSON response with a 200 status and the updated reservation object.
   res.status(200).json({ data: updated })
 }
+
+function validateReservationForUpdate(req, res, next) {
+  const {first_name, last_name, people, reservation_date, reservation_time, mobile_number } = req.body.data;
+  let errorField;
+  // checking if the first name field is present and has a length of at least 1
+  if(!first_name || first_name.length < 1){
+    errorField = 'first_name'
+  }
+  // checking if the last name field is present and has a length of at least 1
+  if(!last_name || last_name.length < 1) {
+    errorField = 'last_name'
+  }
+  // checking if the mobile number field is present and has a length of at least 1
+  if(!mobile_number || mobile_number.length < 1){
+    errorField = 'mobile_number'
+  }
+  // checking if the reservation time field is present
+  if(!reservation_time){
+    errorField = 'reservation_time'
+  }
+  // checking if the reservation date field is present
+  if(!reservation_date) {
+    errorField = 'reservation_date'
+  }
+  // checking if the number of people is not equal to 0
+  if(people === 0) {
+    errorField = 'people'
+  }
+  // if any of the above checks fail, a next() call is made with an error object having a status code of 400 and a message
+  if(errorField){
+    next({status:400, message:`${errorField} is invalid.`})
+  }
+  // if all the checks pass, the next middleware is called
+  next();
+}
+
+
+async function update(req, res, next) {
+  // Extract the found reservation from the response locals
+  const { foundReservation } = res.locals;
+  // Get the updated reservation data from the request body
+  const updatedReservation = req.body.data;
+  // Create an object with the updated data and the reservation id
+  const updatedRes = {
+    ...updatedReservation,
+    reservation_id: foundReservation.reservation_id
+  };
+  // Call the service function to update the reservation
+  const updated = await service.update(updatedRes);
+  // Return a successful response with the updated reservation data
+  res.status(200).json({ data: updated });
+}
+
+module.exports = update;
 
 
 module.exports = {
   list: [asyncErrorBoundary(searchPhoneNum), asyncErrorBoundary(list)],
   create: [hasRequiredProperties, validateInputTypes, asyncErrorBoundary(create)],
   read: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(read)],
-  update: [asyncErrorBoundary(reservationExists), validateStatusChange, asyncErrorBoundary(update)]
+  updateStatus: [asyncErrorBoundary(reservationExists), validateStatusChange, asyncErrorBoundary(updateStatus)],
+  update: [asyncErrorBoundary(reservationExists), validateReservationForUpdate, validateInputTypes, asyncErrorBoundary(update)]
 };
