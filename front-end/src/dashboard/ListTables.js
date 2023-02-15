@@ -1,8 +1,9 @@
 import React from "react";
 import { finishTable } from "../utils/api";
 
-export default function ListTables({ table, loadDashboard }) {
+export default function ListTables({ table, reservation_id, loadDashboard }) {
   if (!table) return null;
+  console.log(table)
 
   /** handles finishing a seated table */
   function handleFinish() {
@@ -12,7 +13,8 @@ export default function ListTables({ table, loadDashboard }) {
       )
     ) {
       const abortController = new AbortController();
-      finishTable(table.table_id, abortController.signal).then(loadDashboard);
+      console.log(table.table_id)
+      finishTable(table.table_id, reservation_id, abortController.signal).then(loadDashboard);
       return () => abortController.abort();
     }
   }
@@ -23,10 +25,10 @@ export default function ListTables({ table, loadDashboard }) {
       <th scope="row">{table.table_id}</th>
       <td>{table.table_name}</td>
       <td>{table.capacity}</td>
-      <td data-table-id-status={table.table_id}>{table.status}</td>
-      <td>{table.reservation_id ? table.reservation_id : "--"}</td>
+      {/* <td data-table-id-status={table.table_id}>{table.status}</td> */}
+      <td data-table-id-status= {table.table_id}>{table.reservation_id ? "occupied" : "free"}</td>
       <td>
-        {table.status === "occupied" ? (
+        {table.reservation_id ? (
           <button
             className="btn btn-sm btn-danger"
             data-table-id-finish={table.table_id}

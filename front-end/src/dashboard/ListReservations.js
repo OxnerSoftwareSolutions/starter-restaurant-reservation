@@ -10,7 +10,7 @@ export default function ListReservations({ reservation, loadDashboard }) {
     /** updates reservation status if user confirms */
     if (
       window.confirm(
-        "Are you sure you want to cancel this reservation? This cannot be undone."
+        "Do you want to cancel this reservation? This cannot be undone."
       )
     ) {
       const abortController = new AbortController();

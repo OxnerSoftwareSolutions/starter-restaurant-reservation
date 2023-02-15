@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
-import { readReservation, listTables, updateTable } from "../utils/api";
+import { readReservation, listTables, updateTable, listReservations } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 
 /**
@@ -13,9 +13,10 @@ import ErrorAlert from "../layout/ErrorAlert";
 function SeatReservation({ tables, setTables }) {
   const { reservation_id } = useParams();
   const history = useHistory();
-
   // state to keep track of selected table
   const [tableId, setTableId] = useState("");
+  const [currentReservation, setCurrentReservation] = useState();
+  const [selectedTable, setSelectedTable] = useState("");
 
   // state to keep track of error
   const [error, setError] = useState(null);
@@ -30,25 +31,50 @@ function SeatReservation({ tables, setTables }) {
   // fetch reservation information
   useEffect(() => {
     const abortController = new AbortController();
+    listReservations().then(setCurrentReservation)
     readReservation(reservation_id, abortController.signal).catch(setError);
     return () => abortController.abort();
   }, [reservation_id]);
 
   // handler to update the selected table
   function changeHandler({ target: { value } }) {
+    checkData(currentReservation, selectedTable)
     setTableId(value);
   }
 
+  function checkData(currentReservation, selectedTable){
+    //TODO unused variables
+    const { capacity, reservation_id } = selectedTable;
+    const { people } = currentReservation;
+    console.log("Check Data", people, capacity, reservation_id)
+    if(reservation_id){
+       setError('Table is occupied')
+      //  return error 
+    }
+    if(people > capacity){
+      setError('Table is too small.')
+      //  return error 
+    }
+}
   // handler to submit the seat form
   const handleSubmit = async (event) => {
     event.preventDefault();
-    updateTable(tableId, reservation_id)
-      .then(() => history.push(`/dashboard`))
-      .catch(setError);
+    const abortController = new AbortController();
+    console.log("INSIDE HANDLESUBMIT", tableId, reservation_id,)
+    try{
+      await updateTable(tableId, reservation_id, abortController.signal)
+      history.push(`/dashboard?date=${currentReservation.reservation_date}`)
+      console.log("HANDLE SUBMIT HERE<--------")
+    } catch(error){
+      console.log(error)
+      setError(error)
+    }
+    return abortController.abort()
   };
 
   // handler to go back to the previous page
-  const handleCancel = () => {
+  const handleCancel = (event) => {
+    event.preventDefault();
     history.goBack();
   };
 
@@ -84,7 +110,6 @@ function SeatReservation({ tables, setTables }) {
           <button
             className="btn btn-success m-1"
             type="submit"
-            onClick={handleSubmit}
           >
             Submit
           </button>

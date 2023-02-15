@@ -5,7 +5,7 @@ const knex = require("../db/connection");
 // The selected columns are 'table_name' and 'status'
 function list(){
     return knex("tables")
-        .select("table_name", "status")
+        .select("table_name","capacity","table_id","reservation_id")
         .orderBy("table_name")
         .groupBy("table_id")  
 }
@@ -38,10 +38,18 @@ function update(updatedTable) {
 }
 
 // This function deletes a table from the 'tables' table in the database based on the provided 'tableId'
+// function destroy(tableId) {
+//     return knex("tables")
+//         .where({ table_id: tableId })
+//         .del()
+// }
+
 function destroy(tableId) {
     return knex("tables")
+        .select("*")
         .where({ table_id: tableId })
-        .del()
+        .update({reservation_id: null})
+        .then((updated) => updated[0])
 }
 
 // Exporting the functions as an object

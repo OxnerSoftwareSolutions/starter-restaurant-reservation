@@ -64,6 +64,14 @@ function validType(){
             }
         }
 
+        if(reservationTimeHours > 21){
+            next({status:400, message: "Invalid time"})
+        }
+
+        if(reservationTimeHours < 10){
+            next({status:400, message: "Invalid time"})
+        }
+
         next();
     }
 }

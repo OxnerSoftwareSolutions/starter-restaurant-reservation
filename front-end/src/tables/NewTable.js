@@ -16,7 +16,7 @@ export default function NewTable({ loadDashboard }) {
    */
   const [formData, setFormData] = useState({
     table_name: "",
-    capacity: 1,
+    capacity: "",
   });
 
   // handleChange function to update the form data when inputs change

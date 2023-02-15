@@ -1,10 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import ErrorAlert from "../layout/ErrorAlert";
-import {
-  createReservation,
-  editReservation,
-} from "../utils/api";
+import {createReservation, readReservation, editReservation,} from "../utils/api";
 
 // component for creating a new reservation or editing an existing one
 export default function NewReservation({
@@ -12,18 +9,37 @@ export default function NewReservation({
   edit,
   // function to refresh the dashboard when a reservation is created or edited
   loadDashboard,
-  // current state of the reservation form
-  formData,
-  // function to update the state of the form
-  setFormData,
 }) {
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    mobile_number: "",
+    reservation_date: "",
+    reservation_time: "",
+    people: "",
+  });
   // use the history object to navigate to a different page after submitting the form
   const history = useHistory();
   // get the reservation ID from the URL parameters (if this component is being used to edit an existing reservation)
   const { reservation_id } = useParams();
   // state for any errors that occur while creating/editing a reservation
   const [errors, setErrors] = useState(null);
-
+  useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+    async function getReservation(){
+      if(edit){
+        let reservation= await readReservation(reservation_id,signal)
+        console.log(reservation)
+        setFormData(reservation)
+      }
+    }
+    getReservation();
+    return function cleanup() {
+      abortController.abort();
+    };
+  }, [edit, reservation_id]);
+  
   // updates the state of the form when the user makes any changes to it
   function handleChange({ target }) {
     setFormData({

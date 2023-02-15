@@ -12,14 +12,6 @@ import Search from "../search/Search";
 
 /** defines all the routes for the application */
 function Routes() {
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    mobile_number: "",
-    reservation_date: "",
-    reservation_time: "",
-    people: "",
-  });
 
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
@@ -64,11 +56,11 @@ function Routes() {
       </Route>
 
       <Route path="/reservations/new">
-        <NewReservation loadDashboard={loadDashboard} formData={formData} setFormData={setFormData} />
+        <NewReservation loadDashboard={loadDashboard}  />
       </Route>
 
       <Route path="/reservations/:reservation_id/edit">
-        <NewReservation loadDashboard={loadDashboard} edit={edit} formData={formData} setFormData={setFormData} />
+        <NewReservation loadDashboard={loadDashboard} edit={edit}  />
       </Route>
 
       <Route path="/reservations/:reservation_id/seat">

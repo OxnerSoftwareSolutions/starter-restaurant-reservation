@@ -56,11 +56,13 @@ async function update(req, res, next) {
     const updatedTable = {
         reservation_id: thisReservation.reservation_id,
         table_id: res.locals.foundTable.table_id,
-        status: 'occupied'
     };
     // Update the table in the `service`
     const updated = await service.update(updatedTable);
     // If the status of the reservation is `seated`, return an error
+    if(foundTable.reservation_id){
+        next({ status: 400, message: `Table is occupied` }) 
+    }
     if (thisReservation.status == 'seated') {
         next({ status: 400, message: `Reservation is ${thisReservation.status}.` });
     }
@@ -74,26 +76,44 @@ async function update(req, res, next) {
 }
 
 // `destroy` middleware function to delete an existing table
+// async function destroy(req, res, next) {
+//     // Get the found table from the `res.locals` object
+//     const { foundTable } = res.locals;
+//     // If the table's status is "free", return an error
+//     if (!foundTable.reservation_id) {
+//         next({ status: 400, message: 'Table is not occupied.' });
+//     }
+//      // Delete the table from the service
+//      await service.delete(foundTable.table_id);
+//      // Fetch the reservation associated with the deleted table
+//      const foundRes = await readRes(foundTable.reservation_id);
+//      // Update the reservation with a new status of 'finished'
+//      await updateRes({
+//          ...foundRes,
+//          status: 'finished'
+//      })
+//      await service.list()
+//      // Return a 200 status to indicate success
+//      res.sendStatus(200);
+//     }
+
 async function destroy(req, res, next) {
-    // Get the found table from the `res.locals` object
     const { foundTable } = res.locals;
-    // If the table's status is "free", return an error
-    if (foundTable.status === "free") {
-        next({ status: 400, message: 'Table is not occupied.' });
-    }
-     // Delete the table from the service
-     await service.delete(foundTable.table_id);
-     // Fetch the reservation associated with the deleted table
-     const foundRes = await readRes(foundTable.reservation_id);
-     // Update the reservation with a new status of 'finished'
-     await updateRes({
-         ...foundRes,
-         status: 'finished'
-     })
-     await service.list()
-     // Return a 200 status to indicate success
-     res.sendStatus(200);
-    }
+
+    foundTable.reservation_id === null ? next({ status: 400, message: 'Table is not occupied.'}) : await service.delete(foundTable.table_id);
+
+    const foundReservation = await readRes(foundTable.reservation_id);
+ 
+
+    const updatedRes = await updateRes({
+        ...foundReservation,
+        status: 'finished',
+    });
+
+    await service.list();
+
+    res.status(200).json({data: updatedRes});
+}
 
     module.exports = {
         list: [asyncErrorBoundary(list)],
