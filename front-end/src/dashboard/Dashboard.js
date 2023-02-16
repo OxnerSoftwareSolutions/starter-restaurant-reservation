@@ -130,7 +130,7 @@ function Dashboard({ date, reservations, tables, loadDashboard }) {
               <th scope="col">Table Name</th>
               <th scope="col">Capacity</th>
               <th scope="col">Status</th>
-              <th scope="col">Reservation ID</th>
+              {/* <th scope="col">Reservation ID</th> */}
               <th scope="col">Finish</th>
             </tr>
           </thead>
